@@ -1,58 +1,75 @@
 import type { Collider } from "../models/collider";
 
-const xResolution = 100;
-const yResolution = 100;
-let xBlockLength = 0;
-let yBlockLength = 0;
-let xBlockHalfLength = 0;
-let yBlockHalfLength = 0
+const xBlockLength = 50; //50 px
+const yBlockLength = 50; //50 px
 
 export const getCurrentPlayerHash = (domRect: DOMRect) => {
-    const xLocation = domRect.left + domRect.width/2;
-    const yLocation = domRect.top + domRect.height/2;
+    const xLocation = Math.floor(domRect.left/xBlockLength);
+    const yLocation = Math.floor(domRect.top/yBlockLength);
     return gridHash(xLocation, yLocation);
 }
 
-export const generateHrefHashes = (domRects: DOMRect[]): Set<number> => {
-    if (!xBlockLength || !yBlockLength)
-        return new Set();
-
-    const set: Set<number> = new Set<number>();
-    domRects.forEach(d => {
-        const numberOfXHashes = d.width/xBlockLength;
-        const numberOfYHashes = d.width/yBlockLength;
-        for (let x = 0; x < numberOfXHashes; x++) {
-            for (let y = 0; y < numberOfYHashes; y++) {
-                const hash = gridHash(d.left + x * xBlockLength, d.top + y * yBlockLength);
-                set.add(hash)
-            }
-        }
-    });
-
-    return set;
-}
-
-export const generatePageHashes = (scrollHeight: number, scrollWidth: number): Map<number, Collider> => {
-    xBlockLength = scrollWidth/xResolution;
-    yBlockLength = scrollHeight/yResolution;
-    xBlockHalfLength = xBlockLength/2;
-    yBlockHalfLength = yBlockLength/2;
-    const hashMap = new Map<number, Collider>();
-    for (let y = 0; y < yResolution; y++) {
-        for (let x = 0; x < xResolution; x++) {
-            const xCenter = xBlockHalfLength + xBlockLength * x;
-            const yCenter = yBlockHalfLength + yBlockLength * y;
-            const x1 = xBlockLength * x;
-            const x2 = xBlockLength + xBlockLength * x;
-            const y1 = yBlockLength * y;
-            const y2 = yBlockLength + yBlockLength * y;
-            const hash = gridHash(xCenter, yCenter);
-            hashMap.set(hash, {x1: x1, x2: x2, y1: y1, y2: y2})
+export const generatePageHashes = (scrollHeight: number, scrollWidth: number): Set<number> => {
+    const xBlockCount = Math.ceil(scrollHeight/xBlockLength);
+    const yBlockCount = Math.ceil(scrollWidth/yBlockLength);
+    const hashMap = new Set<number>();
+    for (let y = 0; y < yBlockCount; y++) {
+        for (let x = 0; x < xBlockCount; x++) {
+            const hash = gridHash(x, y);
+            hashMap.add(hash);
         }
     }
 
     return hashMap;
 }
+
+export const generateHrefHashes = (domRects: DOMRect[]): Map<number, Collider[]> => {
+    const map: Map<number, Collider[]> = new Map<number, Collider[]>();
+    domRects.forEach(d => {
+        const numberOfXGridsCrossed = Math.floor((d.right / xBlockLength)) - Math.floor((d.left / xBlockLength));
+        const numberOfYGridsCrossed = Math.floor((d.bottom / yBlockLength)) - Math.floor((d.top / yBlockLength));
+        const x = Math.floor(d.left/50);
+        const y = Math.floor(d.top/50);
+        let i = -1;
+        let j = -1;
+        do 
+        {
+            j = -1;
+            i++;
+            do {
+                j++;
+                const nextGridHash = gridHash(x + i, y + j);
+                const xOffset = d.left;
+                const yOffset = d.top;
+                const left = i === 0
+                    ? d.left //takes it original location
+                    : xBlockLength * i + xOffset;
+                const right = i === numberOfXGridsCrossed
+                    ? d.right //width takes full grid
+                    : xBlockLength * (i + 1) + xOffset //stops in middle of grid;
+                const top = j === 0
+                    ? d.top
+                    : yBlockLength * j + yOffset;
+                const bottom = j === numberOfYGridsCrossed
+                    ? d.bottom
+                    : yBlockLength * (j + 1) + yOffset;
+
+                const collider: Collider = {x1: left, x2: right, y1: top, y2: bottom};
+                if (map.has(nextGridHash)) {
+                    const existingColliders = map.get(nextGridHash) ?? [];
+                    existingColliders.push(collider);
+                    map.set(nextGridHash, existingColliders);
+                } else {
+                    map.set(nextGridHash, [collider])
+                }
+                    
+            } while (j < numberOfYGridsCrossed)
+        } while (i < numberOfXGridsCrossed)
+    });
+
+    return map;
+}
+
 
 const gridHash = (x: number, y: number): number => {
     const xStr = x.toString();

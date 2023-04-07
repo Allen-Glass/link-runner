@@ -4,3 +4,10 @@ export type Collider = {
     y1: number
     y2: number;
 }
+
+export type Collision = {
+    yAxisCollisionPositive: boolean;
+    yAxisCollisionNegative: boolean;
+    xAxisCollisionPositive: boolean;
+    xAxisCollisionNegative: boolean;
+}
