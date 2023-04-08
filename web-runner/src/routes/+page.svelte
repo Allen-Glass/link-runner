@@ -1,16 +1,17 @@
-<div style="height: 100vh">
-    <Article /> 
-</div>
-<div class="overlay">
-    <hr />
-</div>
-<div id="player" style="top: {playerTop}px; left: {playerLeft}px;" class="player">
-
-</div>
+<main class="bg-primary min-h-screen min-w-fit overflow-x-hidden overflow-y-hidden text-quartinary">
+    <div class="overlay">
+        <a href="https://google.com">^^^^^^</a>
+    </div>
+    <div class="text-2xl mx-4 mt-48">
+        <ArticleFactory />
+    </div>
+    <div id="player" style="top: {playerTop}px; left: {playerLeft}px;" class="player white" />
+</main>
 
 <script lang="ts">
+    import "../app.css";
 	import { onMount } from "svelte";
-    import Article from "../components/testArticle.svelte";
+    import ArticleFactory from "../components/articleFactory.svelte";
 	import type { Collider } from "../models/collider";
 	import { generateHrefHashes, generatePageHashes, getCurrentPlayerHash } from "../services/pageHasher";
 	import { IsOverlappingCollider } from "../services/overlapChecker";
@@ -25,12 +26,11 @@
     let tickIntervalMs: number = 20;
     let playerGridHash: number = 0;
     let pageColliders: Collider[] = [];
-    let pageGridHashes: Set<number> = new Set();
-    let hrefHashes: Map<number, Collider[]> = new Map();
+    let colliderHashing: Map<number, Collider[]> = new Map();
     const tickIntervalPerSecond = tickIntervalMs/1000;
 
     onMount(() => {
-        initializeGrid();
+        initializeColliders();
         initializeHrefs();
         initializeListeners();
         initializeTick();
@@ -43,21 +43,24 @@
         gravityChangeMomentum();
     }
 
-    function initializeGrid() {
+    function initializeColliders() {
         const body = document.body;
         const bodyRect = document.body.getBoundingClientRect();
         const scrollHeightOffset = body.scrollHeight + bodyRect.top;
         const scrollWidthOffset = body.scrollWidth + bodyRect.left;
-        pageGridHashes = generatePageHashes(scrollHeightOffset, scrollWidthOffset);
-        pageColliders = [
-            {x1: bodyRect.left, x2: bodyRect.right, y1: bodyRect.top, y2: bodyRect.bottom}
-        ];
+        const pageGridHashes = generatePageHashes(scrollHeightOffset, scrollWidthOffset);
+
+        const hrefs = Array.from(document.querySelectorAll('a'));
+        const hrefBlocks = hrefs.map(h => h.getBoundingClientRect());
+        const hrefHashes = generateHrefHashes(hrefBlocks);
+        colliderHashing = new Map([...pageGridHashes, ...hrefHashes]);
     }
 
     function initializeHrefs() {
-        const hrefs = Array.from(document.querySelectorAll('a'));
-        const hrefBlocks = hrefs.map(h => h.getBoundingClientRect())
-        hrefHashes = generateHrefHashes(hrefBlocks);
+        
+    }
+
+    function compileColliderMaps() {
     }
 
     function initializeListeners() {
@@ -108,10 +111,10 @@
     }
 
     function checkOverlap() {
-        if (!pageGridHashes.has(playerGridHash))
+        if (!colliderHashing.has(playerGridHash))
             return;
 
-        const collidersInGrid = hrefHashes.get(playerGridHash);
+        const collidersInGrid = colliderHashing.get(playerGridHash);
 
         if (!collidersInGrid)
             return;
@@ -165,6 +168,13 @@
     width: 20px;
     min-height: 20px;
     border-radius: 100%;
-    border: 1px solid black;
+    border: 1px solid whitesmoke;
+}
+
+a {
+    color: #635985;
+}
+a:visited {
+    color: #635985;
 }
 </style>

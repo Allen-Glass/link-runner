@@ -9,14 +9,19 @@ export const getCurrentPlayerHash = (domRect: DOMRect) => {
     return gridHash(xLocation, yLocation);
 }
 
-export const generatePageHashes = (scrollHeight: number, scrollWidth: number): Set<number> => {
+export const generatePageHashes = (scrollHeight: number, scrollWidth: number): Map<number, Collider[]> => {
     const xBlockCount = Math.ceil(scrollHeight/xBlockLength);
     const yBlockCount = Math.ceil(scrollWidth/yBlockLength);
-    const hashMap = new Set<number>();
+    const hashMap = new  Map<number, Collider[]>;
     for (let y = 0; y < yBlockCount; y++) {
         for (let x = 0; x < xBlockCount; x++) {
             const hash = gridHash(x, y);
-            hashMap.add(hash);
+            hashMap.set(hash, [{
+                x1: x * xBlockLength,
+                x2: (x + 1) * xBlockLength,
+                y1: y * yBlockLength,
+                y2: (y + 1) * yBlockLength
+            }]);
         }
     }
 
@@ -69,7 +74,6 @@ export const generateHrefHashes = (domRects: DOMRect[]): Map<number, Collider[]>
 
     return map;
 }
-
 
 const gridHash = (x: number, y: number): number => {
     const xStr = x.toString();
