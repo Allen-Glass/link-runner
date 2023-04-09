@@ -6,7 +6,8 @@ export default {
       "primary": "#18122B",
       "secondary": "#393053",
       "tertiary": "#443C68",
-      "quartinary": "#eceeed"
+      "quartinary": "#eceeed",
+      "link": "#21586f"
     },
     extend: {},
   },
