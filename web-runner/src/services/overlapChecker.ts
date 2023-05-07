@@ -9,16 +9,27 @@ export const IsOverlappingCollider = (playerBounds: DOMRect, colliders: Collider
     let yAxisCollisionNegative = false;
 
     colliders.forEach(c => {
-        xAxisCollisionPositive = xAxisCollisionPositive || (Math.abs(c.x1 - playerBounds.left) < colliderOverlapResolution)
-            && (c.y1 < playerBounds.top && c.y2 > playerBounds.bottom);
-        xAxisCollisionNegative = xAxisCollisionNegative || (Math.abs(c.x2 - playerBounds.right) < colliderOverlapResolution)
-            && (c.y1 < playerBounds.top && c.y2 > playerBounds.bottom);
+        const yAxisCollision = (playerBounds.top < c.y2 && playerBounds.top > c.y1) || (playerBounds.bottom > c.y1 && playerBounds.bottom < c.y2)
+        xAxisCollisionPositive = xAxisCollisionPositive || ((Math.abs(c.x1 - playerBounds.left) < colliderOverlapResolution)
+            && yAxisCollision);
+        xAxisCollisionNegative = xAxisCollisionNegative || ((Math.abs(c.x2 - playerBounds.right) < colliderOverlapResolution)
+            && yAxisCollision);
 
-        yAxisCollisionPositive = yAxisCollisionPositive || (Math.abs(c.y1 - playerBounds.bottom) < colliderOverlapResolution)
-            && (c.x1 < playerBounds.right && c.x2 > playerBounds.left);
-        yAxisCollisionNegative = yAxisCollisionNegative || (Math.abs(c.y2 - playerBounds.top) < colliderOverlapResolution)
-            && (c.x1 < playerBounds.right && c.x2 > playerBounds.left);
+        const xAxisCollision = (playerBounds.left < c.x2 && playerBounds.left > c.x1) || (playerBounds.right > c.x1 && playerBounds.right < c.x2)
+        yAxisCollisionPositive = yAxisCollisionPositive || ((Math.abs(c.y1 - playerBounds.bottom) < colliderOverlapResolution)
+            && xAxisCollision);
+        yAxisCollisionNegative = yAxisCollisionNegative || ((Math.abs(c.y2 - playerBounds.top) < colliderOverlapResolution)
+            && xAxisCollision);
     });
+    if (xAxisCollisionPositive)
+        console.log('xAxisCollisionPositive')
+    if (xAxisCollisionNegative)
+        console.log('xAxisCollisionNegative')
+    if (yAxisCollisionPositive)
+        console.log('yAxisCollisionPositive')
+    if (yAxisCollisionNegative)
+        console.log('yAxisCollisionNegative')
+
     return {
         xAxisCollisionPositive: xAxisCollisionPositive,
         xAxisCollisionNegative: xAxisCollisionNegative,

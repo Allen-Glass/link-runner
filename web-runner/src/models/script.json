@@ -1,0 +1,24 @@
+{
+    "texts": [
+        {
+            "route": "",
+            "text": "Bright flashes of oscillating red and blue lights pierce the night sky. The open {0} beckons your name.",
+            "links": [
+                {
+                    "text": "front door",
+                    "to": "entryway"
+                }
+            ]
+        },
+        {
+            "route": "entryway",
+            "text": "You enter a long hallway. Chatter comes from the opposite end.",
+            "links": [
+                {
+                    "text": "front door",
+                    "to": "entryway"
+                }
+            ]
+        }
+    ]
+}

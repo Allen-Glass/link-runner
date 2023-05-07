@@ -1,13 +1,12 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div on:click={clicked} class="underline text-link cursor-pointer" role="link">
-    {text}
-</div>
+<span on:click={clicked} class="text-link underline cursor-pointer" role="link">
+    <slot></slot>
+</span>
 
 <script lang="ts">
-    export let text: string = "";
-    export let nextLocation: string = "";
+    export let to: string = "";
 
     function clicked() {
-        window.location.hash = `#${nextLocation}`;
+        window.location.hash = `#${to}`;
     }
 </script>
