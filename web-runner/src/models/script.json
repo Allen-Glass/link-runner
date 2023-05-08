@@ -12,11 +12,41 @@
         },
         {
             "route": "entryway",
-            "text": "You enter a long hallway. Chatter comes from the opposite end.",
+            "text": "You enter a long hallway. Chatter comes from the opposite {0}",
             "links": [
                 {
-                    "text": "front door",
-                    "to": "entryway"
+                    "text": "end.",
+                    "to": "hallwayEnd"
+                }
+            ]
+        },
+        {
+            "route": "entryway",
+            "text": "You enter a long hallway. Chatter comes from the opposite {0}.",
+            "links": [
+                {
+                    "text": "end",
+                    "to": "hallwayEnd"
+                }
+            ]
+        },
+        {
+            "route": "entryway",
+            "text": "You enter a long hallway. Chatter comes from the opposite {0}.",
+            "links": [
+                {
+                    "text": "end",
+                    "to": "hallwayEnd"
+                }
+            ]
+        },
+        {
+            "route": "entryway",
+            "text": "You enter a long hallway. Chatter comes from the opposite {0}.",
+            "links": [
+                {
+                    "text": "end",
+                    "to": "hallwayEnd"
                 }
             ]
         }

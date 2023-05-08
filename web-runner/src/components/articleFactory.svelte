@@ -1,5 +1,5 @@
 <div id="article" class="typewriter break-words flex items-center">
-	<div bind:this={textElement}></div>
+
 </div>
 
 <script lang="ts">
@@ -7,13 +7,12 @@
 	import json from "../models/script.json";
 	import { onMount } from "svelte";
 
-	let textElement: HTMLElement = null;
 	let script: Manuscript = null;
 
 	onMount(() => {
 		script = json;
 		loadText();
-		addEventListener("hashchange", (e) => {
+		addEventListener("hashchange", () => {
 			loadText();
 		});
 	})
@@ -30,22 +29,44 @@
 
 	function createText(text: Text) {
 		const articleDiv = document.getElementById("article");
-		const span = document.createElement("span");
-		const linkElements = injectLinkTextElements(text, span);
-		span.innerText = text.text;
-		articleDiv.append(span);
+		articleDiv.innerHTML = "";
+		injectTextElements(text, articleDiv);
 	}
 
-	function injectLinkTextElements(scriptText: Text, parentSpan: HTMLSpanElement) {
+	function injectTextElements(scriptText: Text, articleDiv: HTMLElement) {
+		let elementTextMapping: Map<string, string> = new Map<string, string>();
 		const words = scriptText.text.split(" ");
-		const linkTexts = words.filter(w => w.includes("{") && w.includes("}"));
-		const html = words.map((linkText, index) => {
-			const link = scriptText.links[index];
-			const linkElement = createLinkElement(link);
+		let spanText: string = "";
+		let linkCount = 0;
+		let spanCount = 0;
+		for (let i = 0; i < words.length; i++) {
+			if (words[i].includes("{") && words[i].includes("}")) {
 
-		});
-		
-		return html;
+				if (spanText) {
+					let newSpan = createTextSpan(`${spanText} `);
+					elementTextMapping.set(`text-${spanCount + linkCount}`, `${spanText} `);
+					articleDiv.append(newSpan);
+					spanText = "";
+					spanCount++;
+				}
+
+				const link = scriptText.links[linkCount++];
+				const linkElement = createLinkElement(link);
+				elementTextMapping.set(`text-${spanCount + linkCount}`, `${link.to}`);
+				articleDiv.append(linkElement);
+			} else {
+				spanText = !!spanText || spanCount ? `${spanText} ${words[i]}` : words[i]
+			}
+		}
+
+		const newSpan = createTextSpan(spanText);
+		articleDiv.append(newSpan);
+	}
+
+	function createTextSpan(text: string) {
+		const newSpan = document.createElement("span");
+		newSpan.innerText = text;
+		return newSpan;
 	}
 
 	function createLinkElement(link: Link) {
@@ -58,9 +79,6 @@
 		span.innerText = link.text;
 		span.addEventListener('click', ev => directHandler(ev))
 		return span;
-		const newLink = `<span data-to="${link.to}" role="link" class="text-link underline cursor-pointer">
-							${link.text}
-						</span>`
 	}
 
 	function directHandler(ev: MouseEvent) {
