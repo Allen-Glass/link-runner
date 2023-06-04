@@ -34,51 +34,100 @@
 	}
 
 	function injectTextElements(scriptText: Text, articleDiv: HTMLElement) {
-		let elementTextMapping: Map<string, string> = new Map<string, string>();
+		const fullText = getFullText(scriptText);
+		const elementIds: string[] = [];
 		const words = scriptText.text.split(" ");
 		let spanText: string = "";
+		let breakingIndexes: number[] = [];
 		let linkCount = 0;
 		let spanCount = 0;
 		for (let i = 0; i < words.length; i++) {
-			if (words[i].includes("{") && words[i].includes("}")) {
-
-				if (spanText) {
-					let newSpan = createTextSpan(`${spanText} `);
-					elementTextMapping.set(`text-${spanCount + linkCount}`, `${spanText} `);
-					articleDiv.append(newSpan);
-					spanText = "";
-					spanCount++;
-				}
-
-				const link = scriptText.links[linkCount++];
-				const linkElement = createLinkElement(link);
-				elementTextMapping.set(`text-${spanCount + linkCount}`, `${link.to}`);
-				articleDiv.append(linkElement);
-			} else {
+			const isLinkText = words[i].includes("{") && words[i].includes("}");
+			if (!isLinkText) { //build text prior to link
 				spanText = !!spanText || spanCount ? `${spanText} ${words[i]}` : words[i]
+				continue;
 			}
+
+			if (spanText) { //inject text before a link
+				let sum = getSum(breakingIndexes);
+				const breakingIndex = spanText.length + sum;
+				breakingIndexes.push(breakingIndex);
+				const elementId = `text-${spanCount++ + linkCount}`;
+				let newSpan = createTextSpan(elementId);
+				elementIds.push(elementId);
+				articleDiv.append(newSpan);
+				spanText = "";
+			}
+
+			//inject link
+			const link = scriptText.links[linkCount];
+			const elementId = `text-${spanCount + linkCount++}`;
+			const linkElement = createLinkElement(link, elementId);
+			let sum = getSum(breakingIndexes);
+			const breakingIndex = link.text.length + sum;
+			breakingIndexes.push(breakingIndex);
+			elementIds.push(elementId);
+			articleDiv.append(linkElement);
 		}
 
-		const newSpan = createTextSpan(spanText);
+		
+		let sum = getSum(breakingIndexes);
+		breakingIndexes.push(fullText.length)
+		const elementId = `text-${spanCount++ + linkCount}`;
+		elementIds.push(elementId);
+		const newSpan = createTextSpan(elementId);
 		articleDiv.append(newSpan);
+		typewriter(elementIds, breakingIndexes, fullText, 0, 0);
 	}
 
-	function createTextSpan(text: string) {
+	function getFullText(scriptText: Text) {
+		let text = `${scriptText.text}`
+		for (let i = 0; i < scriptText.links.length; i++) {
+			let reg: RegExp = /\{0\}/i;
+			text = text.replace(reg, scriptText.links[i].text);
+		}
+
+		return text;
+	}
+
+	function getSum(breakingIndexes: number[]) {
+		return breakingIndexes.length 
+			? breakingIndexes[breakingIndexes.length - 1]
+			: 0;
+	}
+
+	function typewriter(elementIds: string[], breakingIndexes: number[], scriptText: string, currentLetterIndex: number, elementIndex: number) {
+		if (currentLetterIndex > breakingIndexes[elementIndex])
+			elementIndex++;
+
+		if (currentLetterIndex === scriptText.length)
+			return;
+
+		const element = document.getElementById(elementIds[elementIndex]);
+		element.innerText = element.innerText + scriptText[currentLetterIndex];
+
+		currentLetterIndex++;
+		setTimeout(function() {
+			typewriter(elementIds, breakingIndexes, scriptText, currentLetterIndex, elementIndex)
+		}, 40)
+	}
+
+	function createTextSpan(id: string) {
 		const newSpan = document.createElement("span");
-		newSpan.innerText = text;
+		newSpan.id = id;
 		return newSpan;
 	}
 
-	function createLinkElement(link: Link) {
-		const span = document.createElement("span");
-		span.classList.add("text-link");
-		span.classList.add("underline");
-		span.classList.add("cursor-pointer");
-		span.setAttribute("data-to", link.to);
-		span.setAttribute("role", "link");
-		span.innerText = link.text;
-		span.addEventListener('click', ev => directHandler(ev))
-		return span;
+	function createLinkElement(link: Link, id: string) {
+		const newSpan = document.createElement("span");
+		newSpan.id = id;
+		newSpan.classList.add("text-link");
+		newSpan.classList.add("underline");
+		newSpan.classList.add("cursor-pointer");
+		newSpan.setAttribute("data-to", link.to);
+		newSpan.setAttribute("role", "link");
+		newSpan.addEventListener('click', ev => directHandler(ev))
+		return newSpan;
 	}
 
 	function directHandler(ev: MouseEvent) {
@@ -89,23 +138,10 @@
 </script>
 
 <style>
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
-}
-
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: orange; }
-}
-
-/* Apply the animation to the text */
 .typewriter {
   display: inline-block;
   overflow: hidden; /* Ensures the text is not visible until animation starts */
-  white-space: pre-wrap; /* Prevents line breaks */
-  font-family: 'Courier', monospace; /* Change as needed */
-  /*animation: typing 1s steps(60, end),
-    blink-caret .75s step-end infinite;; /* 1s duration, 20 steps, ends at final state */
+  white-space: pre-wrap;
+  font-family: 'Courier', monospace;
 }
 </style>

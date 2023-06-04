@@ -5,10 +5,18 @@ export interface Manuscript {
 export interface Text {
     route: string;
     text: string;
-    links: Link[]
+    links: Link[];
+    code?: Code;
 }
 
 export interface Link {
     text: string;
     to: string;
+}
+
+export interface Code {
+    id: string;
+    displayText: string;
+    code: string;
+    route: string;
 }
